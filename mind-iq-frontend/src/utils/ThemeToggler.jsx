@@ -1,0 +1,49 @@
+import { useDispatch, useSelector } from "react-redux";
+import { setTheme } from "@/store/themeSlice/themeSlice";
+import { Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuGroup,
+   DropdownMenuItem,
+   DropdownMenuLabel,
+   DropdownMenuShortcut,
+   DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export default function ThemeToggler() {
+   const dispatch = useDispatch();
+   const theme = useSelector((state) => state.theme.mode);
+   const checked = theme === "dark";
+
+   return (
+      <DropdownMenu>
+         <DropdownMenuTrigger asChild>
+            <Button
+               className="!ring-0 !ring-offset-0 !cursor-pointer"
+               variant="ghost"
+            >
+               {checked ? <Moon size={16} /> : <Sun size={16} />}
+            </Button>
+         </DropdownMenuTrigger>
+         <DropdownMenuContent className="w-56" align="start">
+            <DropdownMenuLabel>Theme</DropdownMenuLabel>
+            <DropdownMenuGroup>
+               <DropdownMenuItem onClick={() => dispatch(setTheme("light"))}>
+                  Light
+                  {/* <DropdownMenuShortcut>⌘L</DropdownMenuShortcut> */}
+               </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => dispatch(setTheme("dark"))}>
+                  Dark
+                  {/* <DropdownMenuShortcut>⌘D</DropdownMenuShortcut> */}
+               </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => dispatch(setTheme("system"))}>
+                  System
+                  {/* <DropdownMenuShortcut>⌘S</DropdownMenuShortcut> */}
+               </DropdownMenuItem>
+            </DropdownMenuGroup>
+         </DropdownMenuContent>
+      </DropdownMenu>
+   );
+}
