@@ -1,5 +1,6 @@
 import React from "react";
 import ThemeToggler from "@/utils/ThemeToggler";
+import Logout from "@/Auth/Logout";
 
 function Header() {
    return (
@@ -7,6 +8,7 @@ function Header() {
          <div className="flex items-center gap-2 font-bold text-lg ">MindIQ</div>
          <div className="flex items-center gap-2">
             <ThemeToggler />
+            <Logout />
          </div>
       </div>
    );

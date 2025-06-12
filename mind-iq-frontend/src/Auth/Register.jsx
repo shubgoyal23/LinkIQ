@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@/lib/api";
 
 const loginSchema = z.object({
    name: z.string().min(3),
@@ -41,7 +42,21 @@ const RegisterPage = ({ setCurrentPage }) => {
    });
 
    const onSubmit = async (data) => {
-      console.log(data);
+      handleRegister(data.email, data.password, data.name);
+   };
+
+   const handleRegister = async (email, password, name) => {
+      api.post("/register", { email, password, name })
+         .then((res) => {
+            if (res.success) {
+               toast.success("Registered successfully");
+               setCurrentPage("login");
+            }
+         })
+         .catch((err) => {
+            console.log(err);
+            toast.error("Failed to register");
+         });
    };
 
    return (
@@ -98,7 +113,7 @@ const RegisterPage = ({ setCurrentPage }) => {
                            <FormItem>
                               <FormLabel>Password</FormLabel>
                               <FormControl>
-                                 <Input placeholder="password" {...field} />
+                                 <Input placeholder="password" type="password" {...field} />
                               </FormControl>
                               <FormMessage />
                            </FormItem>

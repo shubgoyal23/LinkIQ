@@ -42,11 +42,11 @@ app.add_middleware(
     allow_headers=["*"],              # Allow all headers
 )
 
-app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+# app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
 
-@app.get("/")
-def serve_react_app():
-    return FileResponse("frontend/dist/index.html")
+# @app.get("/")
+# def serve_react_app():
+#     return FileResponse("frontend/dist/index.html")
 
 
 @app.get("/ping")
@@ -61,9 +61,6 @@ def login(data: LoginRequest, response: Response):
     user = mongo_find_one({"email": data.email}, "users")
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    if not user.get("approved"):
-        raise HTTPException(status_code=401, detail="User not approved")
     
     if not verify_password(data.password, user.get("password")):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -87,21 +84,26 @@ def register(data: RegisterRequest, response: Response):
     if data.password == "" or data.email == "":
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    mongo_create_one({"email": data.email, "password": hash_password(data.password), "name": data.name, "plan": "free", "approved": False}, "users")
+    created = mongo_create_one({"email": data.email, "password": hash_password(data.password), "name": data.name, "plan": "free"}, "users")
+    if str(created).startswith("Error"):
+        raise HTTPException(status_code=401, detail="User already exists")
     user = mongo_find_one({"email": data.email}, "users")
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    return {"message": "user registered successfully, please wait for approval", "success": True, "data": user}
+        raise HTTPException(status_code=401, detail="Failed to find user")
+    del user["password"]
+    return {"message": "User registered successfully Login to continue", "success": True, "data": user}
 
 @app.post("/logout")
 def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "Logged out successfully", "success": True}
 
-@app.get("/user")
-def user():
-    return {"message": "User is logged in", "success": True}
+@app.get("/auth/me")
+def user(request: Request):
+    user = getattr(request.state, "user", None)
+    if not user:
+        raise HTTPException(status_code=401, detail="user not logged in")
+    return {"message": "User is logged in", "success": True, "data": user}
 
 
 @app.post("/chat")

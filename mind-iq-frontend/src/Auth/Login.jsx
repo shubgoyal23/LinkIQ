@@ -22,6 +22,9 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@/lib/api";
+import { useDispatch } from "react-redux";
+import { login } from "@/store/userSlice/userSlice";
 
 const loginSchema = z.object({
    email: z.string().email(),
@@ -30,6 +33,7 @@ const loginSchema = z.object({
 
 // Login Component
 const LoginPage = ({ setCurrentPage }) => {
+   const dispatch = useDispatch();
    const form = useForm({
       resolver: zodResolver(loginSchema),
       defaultValues: {
@@ -39,25 +43,14 @@ const LoginPage = ({ setCurrentPage }) => {
    });
 
    const onSubmit = async (data) => {
-      console.log(data);
+      handleLogin(data.email, data.password);
    };
 
    const handleLogin = async (email, password) => {
-      fetch("/login", {
-         method: "POST",
-         headers: {
-            "Content-Type": "application/json",
-         },
-         body: JSON.stringify({ email, password }),
-         credentials: "include",
-      })
-         .then((res) => {
-            return res.json();
-         })
+      api.post("/login", { email, password })
          .then((res) => {
             if (res.success) {
-               setUser({ email: res.data.email, name: res.data.name });
-               setCurrentPage("chat");
+               dispatch(login(res.data));
                toast.success("Logged in successfully");
             }
          })
@@ -108,7 +101,7 @@ const LoginPage = ({ setCurrentPage }) => {
                            <FormItem>
                               <FormLabel>Password</FormLabel>
                               <FormControl>
-                                 <Input placeholder="password" {...field} />
+                                 <Input placeholder="password" type="password" {...field} />
                               </FormControl>
                               <FormMessage />
                            </FormItem>

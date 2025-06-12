@@ -28,8 +28,6 @@ class JWTMiddleware(BaseHTTPMiddleware):
         user = mongo_find_one({"_id": ObjectId(user_id)}, "users")
         if not user:
             return JSONResponse(status_code=401, content={"detail": "Invalid token"})
-        if not user.get("approved"):
-            return JSONResponse(status_code=401, content={"detail": "User not approved"})
         del user["password"]
         request.state.user = user
         return await call_next(request)

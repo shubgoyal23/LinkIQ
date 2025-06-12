@@ -1,6 +1,6 @@
 import os
-from typing import List, Optional, Dict, Any, Union
-from pymongo import MongoClient, UpdateOne
+from typing import Optional, Dict, Any, Union
+from pymongo import MongoClient
 from pymongo.collection import Collection
 
 
@@ -51,11 +51,10 @@ def mongo_find_one(query: Dict[str, Any], collection_name: str) -> Union[Dict[st
     except Exception as e:
         return f"Error fetching data: {str(e)}"
     
-def mongo_create_one(query: Dict[str, Any], collection_name: str) -> Union[str, str]:
+def mongo_create_one(query: Dict[str, Any], collection_name: str) -> str:
     collection = _get_collection(collection_name)
     if isinstance(collection, str):
         return collection  # error message
-
     try:
         data = collection.insert_one(query)
         return data.inserted_id
