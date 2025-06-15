@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import AppWindow from "@/AppWindow/Main";
-import Auth from "@/Auth/Auth";
+import { lazy } from "react";
 import { api } from "./lib/api";
 import { useDispatch } from "react-redux";
 import { login } from "./store/userSlice/userSlice";
+
+const AppWindow = lazy(() => import("./AppWindow/Main"));
+const Auth = lazy(() => import("./Auth/Auth"));
 
 function App() {
    const user = useSelector((state) => state.user.loggedIn);

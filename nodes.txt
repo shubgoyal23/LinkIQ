@@ -1,0 +1,39 @@
+# start
+Trigger Manually
+on app event => apps
+on a schedule
+on webhook call
+on form submission
+when executed by another workflow
+on chat message
+on email
+on Error
+Mcp
+
+# next
+   AI
+      AI Agent
+      OpenAI
+      Basic LLM Chain
+      Information Extraction
+      Question Answering
+      Text Summarization
+      Sentiment Analysis
+      Text Classification
+      AI Transform
+      Evaluation
+   Action in a app => apps
+   Data Transformation
+   Flow
+   Core
+   Human in the loop
+
+
+# Next
+   AI Agent
+      tools
+   
+     
+# end
+   
+

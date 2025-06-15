@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setTheme } from "@/store/themeSlice/themeSlice";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
    DropdownMenu,
@@ -8,7 +8,6 @@ import {
    DropdownMenuGroup,
    DropdownMenuItem,
    DropdownMenuLabel,
-   DropdownMenuShortcut,
    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -30,17 +29,14 @@ export default function ThemeToggler() {
          <DropdownMenuContent className="w-56" align="start">
             <DropdownMenuLabel>Theme</DropdownMenuLabel>
             <DropdownMenuGroup>
-               <DropdownMenuItem onClick={() => dispatch(setTheme("light"))}>
-                  Light
-                  {/* <DropdownMenuShortcut>⌘L</DropdownMenuShortcut> */}
+               <DropdownMenuItem className="cursor-pointer" onClick={() => dispatch(setTheme("light"))}>
+                  <Sun size={16} /> Light
                </DropdownMenuItem>
-               <DropdownMenuItem onClick={() => dispatch(setTheme("dark"))}>
-                  Dark
-                  {/* <DropdownMenuShortcut>⌘D</DropdownMenuShortcut> */}
+               <DropdownMenuItem className="cursor-pointer" onClick={() => dispatch(setTheme("dark"))}>
+                  <Moon size={16} /> Dark
                </DropdownMenuItem>
-               <DropdownMenuItem onClick={() => dispatch(setTheme("system"))}>
-                  System
-                  {/* <DropdownMenuShortcut>⌘S</DropdownMenuShortcut> */}
+               <DropdownMenuItem className="cursor-pointer" onClick={() => dispatch(setTheme("system"))}>
+                  <Monitor size={16} /> System
                </DropdownMenuItem>
             </DropdownMenuGroup>
          </DropdownMenuContent>
