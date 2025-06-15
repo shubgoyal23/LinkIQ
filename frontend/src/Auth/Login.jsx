@@ -56,7 +56,7 @@ const LoginPage = ({ setCurrentPage }) => {
          })
          .catch((err) => {
             console.log(err);
-            toast.error("Invalid email or password");
+            toast.error(err.message || "Invalid email or password");
          });
    };
 

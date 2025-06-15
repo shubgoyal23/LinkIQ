@@ -54,8 +54,8 @@ const RegisterPage = ({ setCurrentPage }) => {
             }
          })
          .catch((err) => {
-            console.log(err);
-            toast.error("Failed to register");
+            console.error(err);
+            toast.error(err.message || "Failed to register");
          });
    };
 

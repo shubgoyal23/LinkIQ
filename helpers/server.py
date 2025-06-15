@@ -36,18 +36,17 @@ app = FastAPI()
 app.add_middleware(JWTMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],            # List of allowed origins
+    allow_origins=["http://localhost:5173"],            # List of allowed origins
     allow_credentials=True,           # Allow cookies / credentials
     allow_methods=["*"],              # Allow all HTTP methods
     allow_headers=["*"],              # Allow all headers
 )
 
-# app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
 
-# @app.get("/")
-# def serve_react_app():
-#     return FileResponse("frontend/dist/index.html")
-
+@app.get("/")
+def serve_react_app():
+    return FileResponse("frontend/dist/index.html")
 
 @app.get("/ping")
 def read_root():
@@ -104,50 +103,6 @@ def user(request: Request):
     if not user:
         raise HTTPException(status_code=401, detail="user not logged in")
     return {"message": "User is logged in", "success": True, "data": user}
-
-
-@app.post("/chat")
-def chat(message: Message, request: Request):
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="user not logged in")
-    
-    job_id = str(uuid.uuid4())
-    if not queue_task_helper(user.get("_id"), job_id, "process_message", message.message, message.doc_id):
-        raise HTTPException(status_code=500, detail="Failed to queue document")
-    
-    return {"status": "success", "job_id": job_id}
-
-@app.post("/upload")
-def upload(request: Request, file: UploadFile = File(...)):
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="user not logged in")
-    file.file.seek(0)
-    # upload document to google drive and return file_id
-    job_id = str(uuid.uuid4())
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in [".pdf", ".txt", ".docx"]:
-        raise HTTPException(status_code=400, detail="Unsupported file type")
-    file_name = job_id + file.filename.replace(" ", "_")
-    file_id = upload_to_gcs(file.file, file_name)
-    
-    # queue document task
-    if not queue_task_helper(user.get("_id"), job_id, "process_doc", "NA", file_id):
-        raise HTTPException(status_code=500, detail="Failed to queue document")
-    
-    return {"status": "success", "job_id": job_id}
-
-@app.post("/link")
-def link(request: Request, message: LinkMessage):
-    user = getattr(request.state, "user", None)
-    if not user:
-        raise HTTPException(status_code=401, detail="user not logged in")
-    
-    job_id = str(uuid.uuid4())
-    if not queue_task_helper(user.get("_id"), job_id, "process_link", "NA", message.message):
-        raise HTTPException(status_code=500, detail="Failed to queue document")
-    return {"status": "success", "job_id": job_id}
 
 @app.get("/status/{id}")
 def get_status(id: str):

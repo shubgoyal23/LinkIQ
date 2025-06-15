@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from helpers.jwt_utils import verify_token
 from helpers.mongo_connect import mongo_find_one
 from bson.objectid import ObjectId
-INCLUDE_PATHS = ["/chat", "/user", "/upload", "/link", "/status/"]
+INCLUDE_PATHS = ["/chat", "/auth/me", "/upload", "/link", "/status/"]
 
 class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
