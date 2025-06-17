@@ -44,9 +44,10 @@ def mongo_find_one(query: Dict[str, Any], collection_name: str) -> Union[Dict[st
     collection = _get_collection(collection_name)
     if isinstance(collection, str):
         return collection  # error message
-
     try:
         cursor = collection.find_one(query)
+        if cursor is None:
+            return "Error No document found matching the query"
         return serialize_doc(cursor)
     except Exception as e:
         return f"Error fetching data: {str(e)}"

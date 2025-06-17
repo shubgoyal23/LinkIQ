@@ -88,8 +88,10 @@ def login(data: LoginRequest, response: Response):
 def register(data: RegisterRequest, response: Response):
     if data.password == "" or data.email == "":
         raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    created = mongo_create_one({"email": data.email, "password": hash_password(data.password), "name": data.name, "plan": "free", "isActive": True, "thirdPartyLogin": False}, "users")
+    names = data.name.split(" ")
+    if len(names) < 2:
+        names.append("")
+    created = mongo_create_one({"email": data.email, "password": hash_password(data.password), "firstName": names[0], "lastName": names[1], "plan": "free", "isActive": True, "thirdPartyLogin": False}, "users")
     if str(created).startswith("Error"):
         raise HTTPException(status_code=401, detail="User already exists")
     user = mongo_find_one({"email": data.email}, "users")
@@ -139,8 +141,8 @@ def login_google(data: LoginGoogleRequest, response: Response):
         raise HTTPException(status_code=403, detail="Email not found in Google response")
 
     # Step 3: Find or create user
-    finduser = mongo_find_one({"email": email}, "users")
-    if not finduser:
+    user_doc = mongo_find_one({"email": email}, "users")
+    if str(user_doc).startswith("Error"):
         user_doc = {
             "email": email,
             "firstName": payload.get("given_name"),
@@ -152,13 +154,19 @@ def login_google(data: LoginGoogleRequest, response: Response):
                 "provider": "Google",
                 "uid": payload.get("id"),
             },
+            "password": ""
         }
-        insert_result = mongo_create_one(user_doc, "users")
-        user_doc["_id"] = insert_result.inserted_id
-        finduser = user_doc
+        created_id = mongo_create_one(user_doc, "users")
+        if str(created_id).startswith("Error"):
+            raise HTTPException(status_code=401, detail="Something went wrong")
+        user_doc["_id"] = str(created_id)
+    
+    is_third_party = user_doc.get("thirdPartyLogin")
+    if not is_third_party:
+        raise HTTPException(status_code=401, detail="Login using email and password")
 
-    token = create_token({"sub": finduser.get("_id")}, timedelta(days=1))
-
+    token = create_token({"sub": user_doc.get("_id")}, timedelta(days=1))
+    del user_doc["password"]
     response.set_cookie(
         key="access_token",
         value=token,
@@ -168,7 +176,7 @@ def login_google(data: LoginGoogleRequest, response: Response):
         max_age=86400,
         path="/",
     )
-    return {"message": "Logged in, token set in cookie", "success": True, "data": finduser}
+    return {"message": "Logged in, token set in cookie", "success": True, "data": user_doc}
 
 @app.post("/logout")
 def logout(response: Response):
