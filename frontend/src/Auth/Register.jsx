@@ -23,6 +23,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import GoogleLoginApp from "./GoogleLogin";
 
 const loginSchema = z.object({
    name: z.string().min(3),
@@ -113,7 +114,11 @@ const RegisterPage = ({ setCurrentPage }) => {
                            <FormItem>
                               <FormLabel>Password</FormLabel>
                               <FormControl>
-                                 <Input placeholder="password" type="password" {...field} />
+                                 <Input
+                                    placeholder="password"
+                                    type="password"
+                                    {...field}
+                                 />
                               </FormControl>
                               <FormMessage />
                            </FormItem>
@@ -130,9 +135,7 @@ const RegisterPage = ({ setCurrentPage }) => {
                >
                   Register
                </Button>
-               <Button variant="outline" className="w-full cursor-pointer">
-                  Register with Google
-               </Button>
+               <GoogleLoginApp />
             </CardFooter>
          </Card>
       </div>

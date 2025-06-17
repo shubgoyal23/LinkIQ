@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from helpers.storage import upload_to_gcs
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
+import requests
 class Message(BaseModel):
     message: str
     doc_id: str
@@ -31,6 +31,9 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
     name: str
+    
+class LoginGoogleRequest(BaseModel):
+    token: str
 
 app = FastAPI()
 app.add_middleware(JWTMiddleware)
@@ -61,6 +64,9 @@ def login(data: LoginRequest, response: Response):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    if user.get("thirdPartyLogin"):
+        raise HTTPException(status_code=401, detail=f"User logged in using {user.get('thirdPartyInfo').get('provider')}")
+    
     if not verify_password(data.password, user.get("password")):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
@@ -83,7 +89,7 @@ def register(data: RegisterRequest, response: Response):
     if data.password == "" or data.email == "":
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    created = mongo_create_one({"email": data.email, "password": hash_password(data.password), "name": data.name, "plan": "free"}, "users")
+    created = mongo_create_one({"email": data.email, "password": hash_password(data.password), "name": data.name, "plan": "free", "isActive": True, "thirdPartyLogin": False}, "users")
     if str(created).startswith("Error"):
         raise HTTPException(status_code=401, detail="User already exists")
     user = mongo_find_one({"email": data.email}, "users")
@@ -91,6 +97,78 @@ def register(data: RegisterRequest, response: Response):
         raise HTTPException(status_code=401, detail="Failed to find user")
     del user["password"]
     return {"message": "User registered successfully Login to continue", "success": True, "data": user}
+
+@app.post("/login-google")
+def login_google(data: LoginGoogleRequest, response: Response):
+    if data.token == "":
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Step 1: Exchange token for access token
+    token_url = "https://oauth2.googleapis.com/token"
+    token_payload = {
+        "code": data.token,
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+        "redirect_uri": os.getenv("GOOGLE_REDIRECT_URI"),
+        "grant_type": "authorization_code",
+    }
+
+    token_response = requests.post(token_url, data=token_payload)
+    if token_response.status_code != 200:
+        raise HTTPException(status_code=403, detail="Invalid token or user not found")
+
+    tokens = token_response.json()
+    access_token = tokens.get("access_token")
+
+    if not access_token:
+        raise HTTPException(status_code=403, detail="Access token not received")
+
+    # Step 2: Get user info
+    user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+    user_info_response = requests.get(
+        user_info_url,
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    if user_info_response.status_code != 200:
+        raise HTTPException(status_code=403, detail="Failed to fetch user info")
+
+    payload = user_info_response.json()
+    email = payload.get("email")
+
+    if not email:
+        raise HTTPException(status_code=403, detail="Email not found in Google response")
+
+    # Step 3: Find or create user
+    finduser = mongo_find_one({"email": email}, "users")
+    if not finduser:
+        user_doc = {
+            "email": email,
+            "firstName": payload.get("given_name"),
+            "lastName": payload.get("family_name"),
+            "picture": payload.get("picture"),
+            "isActive": True,
+            "thirdPartyLogin": True,
+            "thirdPartyInfo": {
+                "provider": "Google",
+                "uid": payload.get("id"),
+            },
+        }
+        insert_result = mongo_create_one(user_doc, "users")
+        user_doc["_id"] = insert_result.inserted_id
+        finduser = user_doc
+
+    token = create_token({"sub": finduser.get("_id")}, timedelta(days=1))
+
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=False,  # Should be False for local HTTP (only True in HTTPS)
+        samesite="Lax",
+        max_age=86400,
+        path="/",
+    )
+    return {"message": "Logged in, token set in cookie", "success": True, "data": finduser}
 
 @app.post("/logout")
 def logout(response: Response):

@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:8000";
+import {conf} from "@/conf/conf";
 
 const handleResponse = async (response) => {
   let data = null;
@@ -30,7 +29,7 @@ const request = async (
   endpoint,
   { method = "GET", body, params, headers = {} } = {},
 ) => {
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  const url = new URL(`${conf.API_BASE_URL}${endpoint}`);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) =>

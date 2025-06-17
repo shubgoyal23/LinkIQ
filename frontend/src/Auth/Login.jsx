@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { login } from "@/store/userSlice/userSlice";
+import GoogleLoginApp from "./GoogleLogin";
 
 const loginSchema = z.object({
    email: z.string().email(),
@@ -101,7 +102,11 @@ const LoginPage = ({ setCurrentPage }) => {
                            <FormItem>
                               <FormLabel>Password</FormLabel>
                               <FormControl>
-                                 <Input placeholder="password" type="password" {...field} />
+                                 <Input
+                                    placeholder="password"
+                                    type="password"
+                                    {...field}
+                                 />
                               </FormControl>
                               <FormMessage />
                            </FormItem>
@@ -118,9 +123,7 @@ const LoginPage = ({ setCurrentPage }) => {
                >
                   Login
                </Button>
-               <Button variant="outline" className="w-full cursor-pointer">
-                  Login with Google
-               </Button>
+               <GoogleLoginApp/>
             </CardFooter>
          </Card>
       </div>
