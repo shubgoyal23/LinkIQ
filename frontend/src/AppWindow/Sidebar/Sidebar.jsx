@@ -4,7 +4,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 
 function Sidebar({ collapsed, setCollapsed, addNode }) {
-   const nodes = useSelector((state) => state.nodes.nodes);
+   const nodes = useSelector((state) => state.flow.nodes);
    return (
       <div
          className={`${

@@ -17,7 +17,7 @@ const nodeTypes = {
    startNode: StartNode,
 };
 
-export default function App({
+export default function Flow({
    collapsed,
    setCollapsed,
    nodes,
@@ -33,8 +33,9 @@ export default function App({
 
    const onConnect = useCallback(
       (params) => setEdges((eds) => addEdge(params, eds)),
-      [setEdges]
+      [setEdges],
    );
+   const nodeClassName = (node) => node.type;
 
    return (
       <div className="relative flex-1 overflow-hidden">
@@ -53,7 +54,7 @@ export default function App({
                orientation="horizontal"
                className="flex gap-2 !border-none"
             />
-            <MiniMap />
+            <MiniMap zoomable pannable nodeClassName={nodeClassName} />
             <Background variant="dots" gap={20} size={1} />
          </ReactFlow>
          {collapsed && (

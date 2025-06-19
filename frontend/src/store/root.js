@@ -7,6 +7,6 @@ export default configureStore({
    reducer: {
       user: userReducer,
       theme: themeReducer,
-      nodes: nodesReducer,
+      flow: nodesReducer,
    },
 });
