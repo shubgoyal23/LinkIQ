@@ -48,7 +48,7 @@ const LoginPage = ({ setCurrentPage }) => {
    };
 
    const handleLogin = async (email, password) => {
-      api.post("/login", { email, password })
+      api.post("/api/v1/auth/login", { email, password })
          .then((res) => {
             if (res.success) {
                dispatch(login(res.data));

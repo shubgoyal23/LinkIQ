@@ -23,7 +23,7 @@ function GoogleLoginAppComponent() {
   const LoginWithGoogle = (data) => {
     const token = data?.token;
     api
-      .post("/login-google", {
+      .post("/api/v1/auth/login-google", {
         token,
       })
       .then((res) => {

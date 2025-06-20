@@ -14,7 +14,7 @@ function App() {
 
    useEffect(() => {
       if (!user) {
-         api.get("/auth/me").then((res) => {
+         api.get("/api/v1/auth/me").then((res) => {
             if (res.success && res.data) {
                dispatch(login(res.data));
             }

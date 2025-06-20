@@ -47,7 +47,7 @@ const RegisterPage = ({ setCurrentPage }) => {
    };
 
    const handleRegister = async (email, password, name) => {
-      api.post("/register", { email, password, name })
+      api.post("/api/v1/auth/register", { email, password, name })
          .then((res) => {
             if (res.success) {
                toast.success("Registered successfully");

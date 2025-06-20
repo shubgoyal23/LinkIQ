@@ -1,61 +1,18 @@
 import os
-import uuid
-from fastapi import FastAPI, File, Request, UploadFile
-from helpers.redis import redis_queue_get_data
-from pydantic import BaseModel
-from helpers.queue import queue_task_helper
-from helpers.middleware import JWTMiddleware
-
+from fastapi import APIRouter
+from fastapi import Request
 from fastapi.responses import Response
 from fastapi.exceptions import HTTPException
-from helpers.mongo_connect import mongo_create_one, mongo_find_one
+from server.models import LoginRequest, RegisterRequest, LoginGoogleRequest
 from helpers.jwt_utils import create_token
 from helpers.password_utils import hash_password, verify_password
 from datetime import timedelta
-from fastapi.middleware.cors import CORSMiddleware
-from helpers.storage import upload_to_gcs
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from helpers.mongo_connect import mongo_create_one, mongo_find_one
 import requests
-class Message(BaseModel):
-    message: str
-    doc_id: str
-class LinkMessage(BaseModel):
-    message: str
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
+router = APIRouter()
 
-class RegisterRequest(BaseModel):
-    email: str
-    password: str
-    name: str
-    
-class LoginGoogleRequest(BaseModel):
-    token: str
-
-app = FastAPI()
-app.add_middleware(JWTMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],            # List of allowed origins
-    allow_credentials=True,           # Allow cookies / credentials
-    allow_methods=["*"],              # Allow all HTTP methods
-    allow_headers=["*"],              # Allow all headers
-)
-
-app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
-
-@app.get("/")
-def serve_react_app():
-    return FileResponse("frontend/dist/index.html")
-
-@app.get("/ping")
-def read_root():
-    return {"status": "server is up and running"}
-
-@app.post("/login")
+@router.post("/login")
 def login(data: LoginRequest, response: Response):
     if data.password == "" or data.email == "":
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -84,7 +41,7 @@ def login(data: LoginRequest, response: Response):
     del user["password"]
     return {"message": "Logged in, token set in cookie", "success": True, "data": user}
 
-@app.post("/register")
+@router.post("/register")
 def register(data: RegisterRequest, response: Response):
     if data.password == "" or data.email == "":
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -100,7 +57,7 @@ def register(data: RegisterRequest, response: Response):
     del user["password"]
     return {"message": "User registered successfully Login to continue", "success": True, "data": user}
 
-@app.post("/login-google")
+@router.post("/login-google")
 def login_google(data: LoginGoogleRequest, response: Response):
     if data.token == "":
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -178,19 +135,14 @@ def login_google(data: LoginGoogleRequest, response: Response):
     )
     return {"message": "Logged in, token set in cookie", "success": True, "data": user_doc}
 
-@app.post("/logout")
+@router.post("/logout")
 def logout(response: Response):
     response.delete_cookie("access_token")
     return {"message": "Logged out successfully", "success": True}
 
-@app.get("/auth/me")
+@router.get("/me")
 def user(request: Request):
     user = getattr(request.state, "user", None)
     if not user:
         raise HTTPException(status_code=401, detail="user not logged in")
     return {"message": "User is logged in", "success": True, "data": user}
-
-@app.get("/status/{id}")
-def get_status(id: str):
-    job_data = redis_queue_get_data(id)
-    return {"status": "success", "data": job_data}
